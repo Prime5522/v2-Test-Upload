@@ -159,7 +159,7 @@ async def echo(bot, update):
         )
         if "This video is only available for registered users." in error_message:
             error_message += Translation.SET_CUSTOM_USERNAME_PASSWORD
-        await chk.delete()
+        await message.delete()
 
         time.sleep(40.5)
         await bot.send_message(
@@ -290,7 +290,7 @@ async def echo(bot, update):
                 ]
             )
         reply_markup = InlineKeyboardMarkup(inline_keyboard)
-        await chk.delete()
+        await message.delete()
 
         await bot.send_message(
             chat_id=update.chat.id,
@@ -312,7 +312,7 @@ async def echo(bot, update):
             ]
         )
         reply_markup = InlineKeyboardMarkup(inline_keyboard)
-        await chk.delete(True)
+        await message.delete(True)
 
         await bot.send_message(
             chat_id=update.chat.id,
