@@ -4,7 +4,7 @@ import asyncio
 import logging
 
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from config import Config
 from plugins.script import Translation
@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 user_process = {}
-user_caption_choice = {}  # ✅ ইউজারের ক্যাপশন স্টোর করার জন্য
-user_waiting_for_caption = {}  # ✅ ইউজার কি এখন ক্যাপশন সেন্ড করবে সেটা ট্র্যাক করার জন্য
+user_caption = {}
 
 @Client.on_message(filters.command("cancel"))
 async def cancel_command(client, message: Message):
@@ -30,64 +29,73 @@ async def cancel_command(client, message: Message):
         await message.reply_text("❌ You don't have any ongoing process.")
 
 @Client.on_message(filters.private & filters.regex(pattern=".*http.*"))
-async def echo(bot, update):
-    logger.info(update.from_user)
+async def handle_link(client, message: Message):
+    url = message.text
 
-    url = update.text
-    youtube_dl_username = None
-    youtube_dl_password = None
-    file_name = None
+    if "youtu.be" in url:
+        return await message.reply_text(
+            "**Choose Download type**",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
+                     InlineKeyboardButton("Video 🎬", callback_data="ytdl_video")]
+                ]
+            ),
+            quote=True,
+        )
 
-    # ইউজারের লিংক স্টোর করে রাখবো পরবর্তী প্রসেসের জন্য
-    user_caption_choice[update.from_user.id] = {"url": url}
-
-    # প্রথমে ক্যাপশন সিলেকশন বাটন দেখাবো
-    await update.reply_text(
-        "**Choose caption option:**",
+    # Save the url temporarily for the user
+    user_process[message.from_user.id] = {"url": url}
+    
+    await message.reply_text(
+        "**Choose Caption Option**",
         reply_markup=InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("✅ Default Caption", callback_data="use_default_caption")],
-                [InlineKeyboardButton("📝 Set Custom Caption", callback_data="set_custom_caption")],
+                [InlineKeyboardButton("Default Caption", callback_data="default_caption"),
+                 InlineKeyboardButton("Set Caption", callback_data="set_caption")]
             ]
-        ),
-        quote=True,
+        )
     )
 
-@Client.on_callback_query(filters.regex("use_default_caption|set_custom_caption"))
-async def caption_choice(bot, query: CallbackQuery):
-    user_id = query.from_user.id
-    choice = query.data
+@Client.on_callback_query(filters.regex("default_caption"))
+async def default_caption_handler(client, callback_query):
+    user_id = callback_query.from_user.id
+    data = user_process.get(user_id)
 
-    if user_id not in user_caption_choice:
-        await query.answer("❌ No URL found. Please send the link again.", show_alert=True)
-        return
+    if not data:
+        return await callback_query.message.edit("❌ No URL found. Please send again.")
 
-    if choice == "use_default_caption":
-        user_caption_choice[user_id]["caption"] = "default"
-        await query.message.edit_text("✅ Default caption selected.\n\nProcessing your request... ⏳")
-        await process_url(bot, query.message, user_id)
+    url = data["url"]
+    await callback_query.message.edit("🔄 Processing your request with Default Caption...")
 
-    elif choice == "set_custom_caption":
-        user_waiting_for_caption[user_id] = True
-        await query.message.edit_text("✍️ Please send your custom caption now.")
+    await process_url(client, callback_query.message, url)
 
-@Client.on_message(filters.private & filters.text)
-async def get_custom_caption(bot, message: Message):
+@Client.on_callback_query(filters.regex("set_caption"))
+async def set_caption_handler(client, callback_query):
+    user_id = callback_query.from_user.id
+    if user_id not in user_process:
+        return await callback_query.message.edit("❌ No URL found. Please send again.")
+
+    await callback_query.message.edit("✏️ Please send your custom caption text:")
+
+    user_process[user_id]["awaiting_caption"] = True
+
+@Client.on_message(filters.private)
+async def caption_receiver(client, message: Message):
     user_id = message.from_user.id
 
-    if user_id in user_waiting_for_caption:
-        custom_caption = message.text
-        user_caption_choice[user_id]["caption"] = custom_caption
-        del user_waiting_for_caption[user_id]
+    if user_id in user_process and user_process[user_id].get("awaiting_caption"):
+        caption_text = message.text
+        url = user_process[user_id]["url"]
 
-        await message.reply_text("✅ Custom caption received.\n\nProcessing your request... ⏳")
-        await process_url(bot, message, user_id)
+        await message.reply_text("🔄 Processing your request with your Custom Caption...")
 
-# 🔥 মূল কাজের ফাংশন
-async def process_url(bot, message, user_id):
-    url = user_caption_choice[user_id]["url"]
-    caption_choice = user_caption_choice[user_id]["caption"]
+        user_caption[user_id] = caption_text
+        user_process.pop(user_id, None)  # Done waiting, clean
 
+        await process_url(client, message, url)
+
+async def process_url(client, message, url):
     youtube_dl_username = None
     youtube_dl_password = None
     file_name = None
@@ -121,9 +129,9 @@ async def process_url(bot, message, user_id):
 
     logger.info(command_to_exec)
 
-    chk = await bot.send_message(
+    chk = await client.send_message(
         chat_id=message.chat.id,
-        text="Processing your request please wait ✅⌛",
+        text="Processing your request please wait ⌛",
         disable_web_page_preview=True,
         reply_to_message_id=message.id,
     )
@@ -134,11 +142,7 @@ async def process_url(bot, message, user_id):
         stderr=asyncio.subprocess.PIPE,
     )
 
-    user_process[user_id] = process
-
     stdout, stderr = await process.communicate()
-
-    user_process.pop(user_id, None)
 
     e_response = stderr.decode().strip()
     t_response = stdout.decode().strip()
@@ -148,7 +152,7 @@ async def process_url(bot, message, user_id):
     if e_response and "nonnumeric port" not in e_response:
         await chk.delete()
         await asyncio.sleep(3)
-        await bot.send_message(
+        await client.send_message(
             chat_id=message.chat.id,
             text=Translation.NO_VOID_FORMAT_FOUND.format(str(e_response)),
             reply_to_message_id=message.id,
@@ -158,7 +162,7 @@ async def process_url(bot, message, user_id):
 
     if not t_response:
         await chk.delete()
-        await bot.send_message(
+        await client.send_message(
             chat_id=message.chat.id,
             text="❌ No valid response received.",
             reply_to_message_id=message.id,
@@ -170,7 +174,7 @@ async def process_url(bot, message, user_id):
 
     randem = random_char(5)
     save_ytdl_json_path = (
-        Config.DOWNLOAD_LOCATION + "/" + str(user_id) + f"{randem}.json"
+        Config.DOWNLOAD_LOCATION + "/" + str(message.from_user.id) + f"{randem}.json"
     )
 
     with open(save_ytdl_json_path, "w", encoding="utf8") as outfile:
@@ -187,7 +191,7 @@ async def process_url(bot, message, user_id):
                 format_ext = formats.get("ext", "")
                 size = formats.get("filesize") or formats.get("filesize_approx") or 0
 
-                cb_string_video = f"video|{format_id}|{format_ext}|{randem}"
+                cb_string_video = f"video |{format_id}|{format_ext}|{randem}"
 
                 ikeyboard = [
                     InlineKeyboardButton(
@@ -211,7 +215,7 @@ async def process_url(bot, message, user_id):
     else:
         format_id = response_json.get("format_id")
         format_ext = response_json.get("ext")
-        cb_string_video = f"video|{format_id}|{format_ext}|{randem}"
+        cb_string_video = f"video |{format_id}|{format_ext}|{randem}"
 
         inline_keyboard.append([
             InlineKeyboardButton("🎬 Video", callback_data=cb_string_video)
@@ -225,21 +229,19 @@ async def process_url(bot, message, user_id):
 
     await chk.delete()
 
-    # 🔥 এখন ক্যাপশন চেক করে পাঠানো হবে
-    if caption_choice == "default":
-        caption_text = response_json.get("title", "Your File")  # ডিফল্ট ক্যাপশন টাইটেল থেকে
+    caption_text = user_caption.get(message.from_user.id)
+    if caption_text:
+        caption = caption_text
     else:
-        caption_text = caption_choice  # ইউজারের দেয়া কাস্টম ক্যাপশন
+        caption = Translation.FORMAT_SELECTION.format(response_json.get("thumbnail", "")) + "\n" + Translation.SET_CUSTOM_USERNAME_PASSWORD
 
-    await bot.send_message(
+    await client.send_message(
         chat_id=message.chat.id,
-        text=f"**{caption_text}**\n\n{Translation.FORMAT_SELECTION}",
+        text=caption,
         reply_markup=reply_markup,
         reply_to_message_id=message.id,
+        disable_web_page_preview=True,
     )
 
-    if user_id not in Config.AUTH_USERS:
-        Config.ADL_BOT_RQ[str(user_id)] = time.time()
-
-    # ✅ শেষে ইউজারের ক্যাপশন মেমোরি থেকে রিমুভ করে দিব
-    user_caption_choice.pop(user_id, None)
+    if message.from_user.id not in Config.AUTH_USERS:
+        Config.ADL_BOT_RQ[str(message.from_user.id)] = time.time()
