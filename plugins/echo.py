@@ -12,15 +12,12 @@ from plugins.script import Translation
 from plugins.functions.ran_text import random_char
 from plugins.functions.display_progress import humanbytes
 
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 user_process = {}
 
-# User cancellation process
 @Client.on_message(filters.command("cancel"))
 async def cancel_command(client, message: Message):
     user_id = message.from_user.id
@@ -43,12 +40,10 @@ async def echo(bot, update):
         return await update.reply_text(
             "**Choose Download type**",
             reply_markup=InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
-                        InlineKeyboardButton("Video 🎬", callback_data="ytdl_video"),
-                    ]
-                ]
+                [[
+                    InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
+                    InlineKeyboardButton("Video 🎬", callback_data="ytdl_video"),
+                ]]
             ),
             quote=True,
         )
@@ -67,14 +62,10 @@ async def echo(bot, update):
                 o, length = entity.offset, entity.length
                 url = url[o: o + length]
 
-    if url:
-        url = url.strip()
-    if file_name:
-        file_name = file_name.strip()
-    if youtube_dl_username:
-        youtube_dl_username = youtube_dl_username.strip()
-    if youtube_dl_password:
-        youtube_dl_password = youtube_dl_password.strip()
+    if url: url = url.strip()
+    if file_name: file_name = file_name.strip()
+    if youtube_dl_username: youtube_dl_username = youtube_dl_username.strip()
+    if youtube_dl_password: youtube_dl_password = youtube_dl_password.strip()
 
     command_to_exec = ["yt-dlp", "--no-warnings", "--allow-dynamic-mpd", "-j", url]
     if Config.HTTP_PROXY:
@@ -88,7 +79,7 @@ async def echo(bot, update):
 
     chk = await bot.send_message(
         chat_id=update.chat.id,
-        text="Processing your request Please Wate⌛",
+        text="Processing your request please wait ⌛",
         disable_web_page_preview=True,
         reply_to_message_id=update.id,
     )
@@ -119,7 +110,7 @@ async def echo(bot, update):
             reply_to_message_id=update.id,
             disable_web_page_preview=True,
         )
-        return
+        return False
 
     if not t_response:
         await chk.delete()
@@ -130,11 +121,12 @@ async def echo(bot, update):
         )
         return
 
-    response_json = json.loads(t_response.split("\n")[0])
+    x_response = t_response.split("\n")[0]
+    response_json = json.loads(x_response)
 
     randem = random_char(5)
     save_ytdl_json_path = (
-        Config.DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + f"_{randem}.json"
+        Config.DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + f"{randem}.json"
     )
 
     with open(save_ytdl_json_path, "w", encoding="utf8") as outfile:
@@ -150,6 +142,7 @@ async def echo(bot, update):
             if format_string and "DASH" not in format_string.upper():
                 format_ext = formats.get("ext", "")
                 size = formats.get("filesize") or formats.get("filesize_approx") or 0
+
                 cb_string_video = f"video |{format_id}|{format_ext}|{randem}"
 
                 ikeyboard = [
@@ -171,25 +164,30 @@ async def echo(bot, update):
             InlineKeyboardButton("⛔ Close", callback_data="close")
         ])
 
-        reply_markup = InlineKeyboardMarkup(inline_keyboard)
-
-        await chk.delete()
-
-        await bot.send_message(
-            chat_id=update.chat.id,
-            text=Translation.FORMAT_SELECTION.format(Thumbnail)
-                 + "\n" + Translation.SET_CUSTOM_USERNAME_PASSWORD,
-            reply_markup=reply_markup,
-            reply_to_message_id=update.id,
-        )
-
-        if update.from_user.id not in Config.AUTH_USERS:
-            Config.ADL_BOT_RQ[str(update.from_user.id)] = time.time()
     else:
-        await chk.delete()
-        await bot.send_message(
-            chat_id=update.chat.id,
-            text="❌ No formats found.",
-            reply_to_message_id=update.id,
-                               )
+        format_id = response_json.get("format_id")
+        format_ext = response_json.get("ext")
+        cb_string_video = f"video |{format_id}|{format_ext}|{randem}"
+
+        inline_keyboard.append([
+            InlineKeyboardButton("🎬 Video", callback_data=cb_string_video)
+        ])
+
+        inline_keyboard.append([
+            InlineKeyboardButton("📁 Document", callback_data=cb_string_video)
+        ])
+
+    reply_markup = InlineKeyboardMarkup(inline_keyboard)
+
+    await chk.delete()
+
+    await bot.send_message(
+        chat_id=update.chat.id,
+        text=Translation.FORMAT_SELECTION.format(Thumbnail) + "\n" + Translation.SET_CUSTOM_USERNAME_PASSWORD,
+        reply_markup=reply_markup,
+        reply_to_message_id=update.id,
+    )
+
+    if update.from_user.id not in Config.AUTH_USERS:
+        Config.ADL_BOT_RQ[str(update.from_user.id)] = time.time()
         
