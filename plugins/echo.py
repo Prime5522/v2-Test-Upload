@@ -3,7 +3,6 @@ import json
 import asyncio
 import logging
 
-from pyrogram.types import Thumbnail
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
@@ -17,6 +16,7 @@ logger = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 user_process = {}
+user_caption = {}
 
 @Client.on_message(filters.command("cancel"))
 async def cancel_command(client, message: Message):
@@ -29,24 +29,76 @@ async def cancel_command(client, message: Message):
         await message.reply_text("❌ You don't have any ongoing process.")
 
 @Client.on_message(filters.private & filters.regex(pattern=".*http.*"))
-async def echo(bot, update):
-    logger.info(update.from_user)
-    url = update.text
-    youtube_dl_username = None
-    youtube_dl_password = None
-    file_name = None
+async def handle_link(client, message: Message):
+    url = message.text
 
     if "youtu.be" in url:
-        return await update.reply_text(
+        return await message.reply_text(
             "**Choose Download type**",
             reply_markup=InlineKeyboardMarkup(
-                [[
-                    InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
-                    InlineKeyboardButton("Video 🎬", callback_data="ytdl_video"),
-                ]]
+                [
+                    [InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
+                     InlineKeyboardButton("Video 🎬", callback_data="ytdl_video")]
+                ]
             ),
             quote=True,
         )
+
+    # Save the url temporarily for the user
+    user_process[message.from_user.id] = {"url": url}
+
+    await message.reply_text(
+        "**Choose Caption Option**",
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("Default Caption", callback_data="default_caption"),
+                 InlineKeyboardButton("✏️ Set Caption", callback_data="set_caption")]
+            ]
+        )
+    )
+
+@Client.on_callback_query(filters.regex("default_caption"))
+async def default_caption_handler(client, callback_query):
+    user_id = callback_query.from_user.id
+    data = user_process.get(user_id)
+
+    if not data:
+        return await callback_query.message.edit("❌ No URL found. Please send again.")
+
+    url = data["url"]
+    await callback_query.message.edit("🔄 Processing your request with Default Caption...")
+
+    await process_url(client, callback_query.message, url, user_id)
+
+@Client.on_callback_query(filters.regex("set_caption"))
+async def set_caption_handler(client, callback_query):
+    user_id = callback_query.from_user.id
+    if user_id not in user_process:
+        return await callback_query.message.edit("❌ No URL found. Please send again.")
+
+    await callback_query.message.edit("✏️ Please send your custom caption text:")
+
+    user_process[user_id]["awaiting_caption"] = True
+
+@Client.on_message(filters.private)
+async def caption_receiver(client, message: Message):
+    user_id = message.from_user.id
+
+    if user_id in user_process and user_process[user_id].get("awaiting_caption"):
+        caption_text = message.text
+        url = user_process[user_id]["url"]
+
+        await message.reply_text("🔄 Processing your request with your Custom Caption...")
+
+        user_caption[user_id] = caption_text
+        user_process.pop(user_id, None)  # Done waiting, clean
+
+        await process_url(client, message, url, user_id)
+
+async def process_url(client, message, url, user_id):
+    youtube_dl_username = None
+    youtube_dl_password = None
+    file_name = None
 
     if "|" in url:
         url_parts = url.split("|")
@@ -55,7 +107,7 @@ async def echo(bot, update):
         elif len(url_parts) == 4:
             url, file_name, youtube_dl_username, youtube_dl_password = url_parts
     else:
-        for entity in update.entities or []:
+        for entity in message.entities or []:
             if entity.type == "text_link":
                 url = entity.url
             elif entity.type == "url":
@@ -77,11 +129,11 @@ async def echo(bot, update):
 
     logger.info(command_to_exec)
 
-    chk = await bot.send_message(
-        chat_id=update.chat.id,
+    chk = await client.send_message(
+        chat_id=message.chat.id,
         text="Processing your request please wait ⌛",
         disable_web_page_preview=True,
-        reply_to_message_id=update.id,
+        reply_to_message_id=message.id,
     )
 
     process = await asyncio.create_subprocess_exec(
@@ -90,11 +142,7 @@ async def echo(bot, update):
         stderr=asyncio.subprocess.PIPE,
     )
 
-    user_process[update.from_user.id] = process
-
     stdout, stderr = await process.communicate()
-
-    user_process.pop(update.from_user.id, None)
 
     e_response = stderr.decode().strip()
     t_response = stdout.decode().strip()
@@ -104,20 +152,20 @@ async def echo(bot, update):
     if e_response and "nonnumeric port" not in e_response:
         await chk.delete()
         await asyncio.sleep(3)
-        await bot.send_message(
-            chat_id=update.chat.id,
+        await client.send_message(
+            chat_id=message.chat.id,
             text=Translation.NO_VOID_FORMAT_FOUND.format(str(e_response)),
-            reply_to_message_id=update.id,
+            reply_to_message_id=message.id,
             disable_web_page_preview=True,
         )
         return False
 
     if not t_response:
         await chk.delete()
-        await bot.send_message(
-            chat_id=update.chat.id,
+        await client.send_message(
+            chat_id=message.chat.id,
             text="❌ No valid response received.",
-            reply_to_message_id=update.id,
+            reply_to_message_id=message.id,
         )
         return
 
@@ -126,7 +174,7 @@ async def echo(bot, update):
 
     randem = random_char(5)
     save_ytdl_json_path = (
-        Config.DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + f"{randem}.json"
+        Config.DOWNLOAD_LOCATION + "/" + str(message.from_user.id) + f"{randem}.json"
     )
 
     with open(save_ytdl_json_path, "w", encoding="utf8") as outfile:
@@ -181,13 +229,19 @@ async def echo(bot, update):
 
     await chk.delete()
 
-    await bot.send_message(
-        chat_id=update.chat.id,
-        text=Translation.FORMAT_SELECTION.format(Thumbnail) + "\n" + Translation.SET_CUSTOM_USERNAME_PASSWORD,
+    caption_text = user_caption.get(user_id)
+    if caption_text:
+        caption = caption_text
+    else:
+        caption = Translation.FORMAT_SELECTION.format(response_json.get("thumbnail", "")) + "\n" + Translation.SET_CUSTOM_USERNAME_PASSWORD
+
+    await client.send_message(
+        chat_id=message.chat.id,
+        text=caption,
         reply_markup=reply_markup,
-        reply_to_message_id=update.id,
+        reply_to_message_id=message.id,
+        disable_web_page_preview=True,
     )
 
-    if update.from_user.id not in Config.AUTH_USERS:
-        Config.ADL_BOT_RQ[str(update.from_user.id)] = time.time()
-        
+    if message.from_user.id not in Config.AUTH_USERS:
+        Config.ADL_BOT_RQ[str(message.from_user.id)] = time.time()
