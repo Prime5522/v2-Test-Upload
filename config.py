@@ -33,7 +33,7 @@ class Config(object):
     HTTP_PROXY = os.environ.get("HTTP_PROXY", "")
 
     # Set timeout for subprocess
-    PROCESS_MAX_TIMEOUT = 1800
+    PROCESS_MAX_TIMEOUT = 300
 
     OWNER_ID = os.environ.get("OWNER_ID")
     ADL_BOT_RQ = {}
