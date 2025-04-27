@@ -134,7 +134,7 @@ async def echo(bot, update):
                         process_max_timeout, present_time
                     ),
                     disable_web_page_preview=True,
-                    message_id=chk.id,
+                    message_id=message.id,
                 )
                 return
         else:
