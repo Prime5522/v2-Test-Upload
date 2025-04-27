@@ -5,7 +5,7 @@ import logging
 
 from pyrogram.types import Thumbnail
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from config import Config
 from plugins.script import Translation
