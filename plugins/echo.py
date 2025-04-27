@@ -3,6 +3,7 @@ import json
 import asyncio
 import logging
 
+from pyrogram.types import Thumbnail
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
@@ -11,29 +12,46 @@ from plugins.script import Translation
 from plugins.functions.ran_text import random_char
 from plugins.functions.display_progress import humanbytes
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 user_process = {}
 
+# User cancellation process
 @Client.on_message(filters.command("cancel"))
 async def cancel_command(client, message: Message):
     user_id = message.from_user.id
     if user_id in user_process:
         task = user_process.pop(user_id)
-        task.cancel()
+        task.kill()
         await message.reply_text("✅ Your ongoing process has been cancelled. Now you can send a new link.")
     else:
         await message.reply_text("❌ You don't have any ongoing process.")
 
 @Client.on_message(filters.private & filters.regex(pattern=".*http.*"))
-async def echo(bot, update: Message):
+async def echo(bot, update):
     logger.info(update.from_user)
-    url = update.text.strip()
+    url = update.text
     youtube_dl_username = None
     youtube_dl_password = None
     file_name = None
+
+    if "youtu.be" in url:
+        return await update.reply_text(
+            "**Choose Download type**",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
+                        InlineKeyboardButton("Video 🎬", callback_data="ytdl_video"),
+                    ]
+                ]
+            ),
+            quote=True,
+        )
 
     if "|" in url:
         url_parts = url.split("|")
@@ -58,8 +76,6 @@ async def echo(bot, update: Message):
     if youtube_dl_password:
         youtube_dl_password = youtube_dl_password.strip()
 
-    logger.info(url)
-
     command_to_exec = ["yt-dlp", "--no-warnings", "--allow-dynamic-mpd", "-j", url]
     if Config.HTTP_PROXY:
         command_to_exec.extend(["--proxy", Config.HTTP_PROXY])
@@ -72,7 +88,7 @@ async def echo(bot, update: Message):
 
     chk = await bot.send_message(
         chat_id=update.chat.id,
-        text="Processing your request ⌛",
+        text="Processing your request Please Wate⌛",
         disable_web_page_preview=True,
         reply_to_message_id=update.id,
     )
@@ -86,6 +102,7 @@ async def echo(bot, update: Message):
     user_process[update.from_user.id] = process
 
     stdout, stderr = await process.communicate()
+
     user_process.pop(update.from_user.id, None)
 
     e_response = stderr.decode().strip()
@@ -98,7 +115,7 @@ async def echo(bot, update: Message):
         await asyncio.sleep(3)
         await bot.send_message(
             chat_id=update.chat.id,
-            text=Translation.NO_VOID_FORMAT_FOUND.format(e_response),
+            text=Translation.NO_VOID_FORMAT_FOUND.format(str(e_response)),
             reply_to_message_id=update.id,
             disable_web_page_preview=True,
         )
@@ -108,46 +125,46 @@ async def echo(bot, update: Message):
         await chk.delete()
         await bot.send_message(
             chat_id=update.chat.id,
-            text="❌ No response from server or unsupported link.",
-            reply_to_message_id=update.id
+            text="❌ No valid response received.",
+            reply_to_message_id=update.id,
         )
         return
 
     response_json = json.loads(t_response.split("\n")[0])
 
     randem = random_char(5)
-    save_ytdl_json_path = f"{Config.DOWNLOAD_LOCATION}/{update.from_user.id}_{randem}.json"
+    save_ytdl_json_path = (
+        Config.DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + f"_{randem}.json"
+    )
+
     with open(save_ytdl_json_path, "w", encoding="utf8") as outfile:
         json.dump(response_json, outfile, ensure_ascii=False)
 
     inline_keyboard = []
+    duration = response_json.get("duration")
 
     if "formats" in response_json:
         for formats in response_json["formats"]:
             format_id = formats.get("format_id")
-            format_string = formats.get("format_note") or formats.get("format", "Unknown")
-            if "DASH" in format_string.upper():
-                continue
-            format_ext = formats.get("ext", "")
-            size = formats.get("filesize") or formats.get("filesize_approx") or 0
+            format_string = formats.get("format_note") or formats.get("format")
+            if format_string and "DASH" not in format_string.upper():
+                format_ext = formats.get("ext", "")
+                size = formats.get("filesize") or formats.get("filesize_approx") or 0
+                cb_string_video = f"video |{format_id}|{format_ext}|{randem}"
 
-            cb_string_video = f"video|{format_id}|{format_ext}|{randem}"
+                ikeyboard = [
+                    InlineKeyboardButton(
+                        f"🎬 {format_string} {format_ext} {humanbytes(size)}",
+                        callback_data=cb_string_video
+                    )
+                ]
+                inline_keyboard.append(ikeyboard)
 
-            ikeyboard = [
-                InlineKeyboardButton(
-                    f"🎬 {format_string} {format_ext} {humanbytes(size)}",
-                    callback_data=cb_string_video
-                )
-            ]
-            inline_keyboard.append(ikeyboard)
-
-        if response_json.get("duration"):
+        if duration:
             for rate in ["64k", "128k", "320k"]:
                 cb_string_audio = f"audio|{rate}|mp3|{randem}"
                 inline_keyboard.append([
-                    InlineKeyboardButton(
-                        f"🎼 MP3 ({rate})", callback_data=cb_string_audio
-                    )
+                    InlineKeyboardButton(f"🎼 MP3 ({rate})", callback_data=cb_string_audio)
                 ])
 
         inline_keyboard.append([
@@ -160,19 +177,19 @@ async def echo(bot, update: Message):
 
         await bot.send_message(
             chat_id=update.chat.id,
-            text=Translation.FORMAT_SELECTION,
+            text=Translation.FORMAT_SELECTION.format(Thumbnail)
+                 + "\n" + Translation.SET_CUSTOM_USERNAME_PASSWORD,
             reply_markup=reply_markup,
             reply_to_message_id=update.id,
         )
 
-        # Only now update timeout records for free users (if successful)
         if update.from_user.id not in Config.AUTH_USERS:
             Config.ADL_BOT_RQ[str(update.from_user.id)] = time.time()
     else:
         await chk.delete()
         await bot.send_message(
             chat_id=update.chat.id,
-            text="❌ Unable to fetch formats.",
-            reply_to_message_id=update.id
-        )
+            text="❌ No formats found.",
+            reply_to_message_id=update.id,
+                               )
         
