@@ -22,9 +22,10 @@ user_process = {}
 async def cancel_command(client, message: Message):
     user_id = message.from_user.id
     if user_id in user_process:
-        task = user_process.pop(user_id)
-        task.kill()
-        await message.reply_text("✅ Your ongoing process has been cancelled. Now you can send a new link.")
+        process = user_process.pop(user_id)
+        process.kill()
+        await process.wait()  # ✅ এখানে wait যোগ করা লাগবে
+        await message.reply_text("✅ Your ongoing process has been cancelled successfully. Now you can send a new link.")
     else:
         await message.reply_text("❌ You don't have any ongoing process.")
 
