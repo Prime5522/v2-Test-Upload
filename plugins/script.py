@@ -83,30 +83,35 @@ Sᴇɴᴅ ᴍᴇ ᴛʜᴇ Gᴏᴏɢʟᴇ Dʀɪᴠᴇ | Yᴛᴅʟ | Dɪʀᴇᴄ�
 """
 
     START_BUTTONS = InlineKeyboardMarkup(
+    [
         [
-            [
-                InlineKeyboardButton("〆 ʜᴇʟᴘ 〆", callback_data="help"),
-                InlineKeyboardButton("〆 ᴀʙᴏᴜᴛ 〆", callback_data="about"),
-            ],
-            [InlineKeyboardButton("✧ ᴄʀᴇᴀᴛᴏʀ ✧", url="https://t.me/Prime_Nayem")],
-        ]
+            InlineKeyboardButton("✪ Sᴜᴘᴘᴏʀᴛ Gʀᴏᴜᴘ ✪'", url="https://t.me/Prime_Botz_Support"),
+            InlineKeyboardButton("〄 ᴍᴏᴠɪᴇ ᴄʜᴀɴɴᴇʟ 〄", url="https://t.me/PRIMECINEZONE"),
+        ],
+        [InlineKeyboardButton("〄 ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ 〄", url="https://t.me/Prime_Botz")],
+        [
+            InlineKeyboardButton("〆 ʜᴇʟᴘ 〆", callback_data="help"),
+            InlineKeyboardButton("〆 ᴀʙᴏᴜᴛ 〆", callback_data="about"),
+        ],
+        [InlineKeyboardButton("✧ ᴄʀᴇᴀᴛᴏʀ ✧", url="https://t.me/Prime_Nayem")],
+    ]
     )
     HELP_BUTTONS = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("🏠 Home", callback_data="home"),
-                InlineKeyboardButton("🦊 About", callback_data="about"),
+                InlineKeyboardButton("✪ Sᴜᴘᴘᴏʀᴛ Gʀᴏᴜᴘ ✪'", url="https://t.me/Prime_Botz_Support"),
+                InlineKeyboardButton("〆 ᴀʙᴏᴜᴛ 〆", callback_data="about"),
             ],
-            [InlineKeyboardButton("📛 Close", callback_data="close")],
+            [InlineKeyboardButton("🏠 Hᴏᴍᴇ 🏘️", callback_data="home")],
         ]
     )
     ABOUT_BUTTONS = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("🏠 Home", callback_data="home"),
-                InlineKeyboardButton("❓ Help", callback_data="help"),
+                InlineKeyboardButton("✪ Sᴜᴘᴘᴏʀᴛ Gʀᴏᴜᴘ ✪'", url="https://t.me/Prime_Botz_Support"),
+                InlineKeyboardButton("〆 ʜᴇʟᴘ 〆", callback_data="help"),
             ],
-            [InlineKeyboardButton("📛 Close", callback_data="close")],
+            [InlineKeyboardButton("🏠 Hᴏᴍᴇ 🏘️", callback_data="home")],
         ]
     )
     BUTTONS = InlineKeyboardMarkup(
@@ -114,16 +119,16 @@ Sᴇɴᴅ ᴍᴇ ᴛʜᴇ Gᴏᴏɢʟᴇ Dʀɪᴠᴇ | Yᴛᴅʟ | Dɪʀᴇᴄ�
     )
     FORMAT_SELECTION = "Now Select the desired formats"
     SET_CUSTOM_USERNAME_PASSWORD = """"""
-    DOWNLOAD_START = "Trying to Download ⌛\n\n <i>{} </i>"
+    DOWNLOAD_START = "Trying to Download Please wait..⌛\n\n <i>{} </i>"
     UPLOAD_START = "<i>{} </i>\n\n📤 Uploading Please Wait "
     RCHD_TG_API_LIMIT = "Downloaded in {} seconds.\nDetected File Size: {}\nSorry. But, I cannot upload files greater than 2GB due to Telegram API limitations."
     AFTER_SUCCESSFUL_UPLOAD_MSG_WITH_TS = (
-        "Dᴏᴡɴʟᴏᴀᴅᴇᴅ ɪɴ {} sᴇᴄᴏɴᴅs.\n\nTʜᴀɴᴋs Fᴏʀ Usɪɴɢ Mᴇ\n\nUᴘʟᴏᴀᴅᴇᴅ ɪɴ {} sᴇᴄᴏɴᴅs"
+        "Dᴏᴡɴʟᴏᴀᴅᴇᴅ ɪɴ {} sᴇᴄᴏɴᴅs.\n\nTʜᴀɴᴋs Fᴏʀ Usɪɴɢ Mᴇ\n\nUᴘʟᴏᴀᴅᴇᴅ ɪɴ {} sᴇᴄᴏɴᴅs \n\n🤝 Sᴛᴀʏ ᴡɪᴛʜ Uꜱ <a href='https://t.me/Prime_Botz'>ᴘʀɪᴍᴇ ʙᴏᴛz 🔥</a>"
     )
     FF_MPEG_DEL_ETED_CUSTOM_MEDIA = "✅ Media cleared succesfully."
     CUSTOM_CAPTION_UL_FILE = ""
     NO_VOID_FORMAT_FOUND = "ERROR... <code>{}</code>"
-    FREE_USER_LIMIT_Q_SZE = "Cannot Process, Time OUT..."
+    FREE_USER_LIMIT_Q_SZE = "Cannot Process, Time OUT... Please Wait Sometimes And Send Your Link Again."
     SLOW_URL_DECED = """
     Gosh that seems to be a very slow URL. Since you were screwing my home,
     I am in no mood to download this file. Meanwhile, why don't you try this:==> https://shrtz.me/PtsVnf6
