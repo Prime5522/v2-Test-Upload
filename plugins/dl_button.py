@@ -234,6 +234,7 @@ async def ddl_call_back(bot, update):
             disable_web_page_preview=True,
         )
 
+
 async def download_coroutine(bot, session, url, file_name, chat_id, message_id, start):
     downloaded = 0
     display_message = ""
@@ -253,42 +254,42 @@ async def download_coroutine(bot, session, url, file_name, chat_id, message_id, 
                     break
 
                 f_handle.write(chunk)
-                downloaded += len(chunk)  # Update with actual chunk length
+                downloaded += Config.CHUNK_SIZE
                 now = time.time()
                 diff = now - start
 
-                # Update status at regular intervals or when download is complete
-                if downloaded % Config.CHUNK_SIZE == 0 or downloaded == total_length:
-                    percentage = (downloaded * 100) / total_length
-                    speed = downloaded / diff  # speed in bytes per second
-                    elapsed_time = round(diff) * 1000  # milliseconds
-                    time_to_completion = round((total_length - downloaded) / speed) * 1000
+                if round(diff % 5.0) == 0 or downloaded == total_length:
+                    percentage = downloaded * 100 / total_length
+                    speed = downloaded / diff
+                    elapsed_time = round(diff) * 1000
+                    time_to_completion = (
+                        round((total_length - downloaded) / speed) * 1000
+                    )
                     estimated_total_time = elapsed_time + time_to_completion
 
-                    current_message = """**Download Status**
-Percentage : {:.2f}%
+                    try:
+                        current_message = """Download Status
+Percentage : {}
 URL: {}
 File Size: {}
 Downloaded: {}
-Speed: {} KB/s
 ETA: {}""".format(
                             percentage,
                             url,
                             humanbytes(total_length),
                             humanbytes(downloaded),
-                            round(speed / 1024, 2),  # speed in KB/s
                             TimeFormatter(estimated_total_time),
                         )
 
-                    # Only update message if it's different
-                    if current_message != display_message:
-                        try:
+                        if current_message != display_message:
                             await bot.edit_message_text(
                                 chat_id, message_id, text=current_message
                             )
+
                             display_message = current_message
-                        except Exception as e:
-                            logger.error(f"Error updating message: {e}")
+
+                    except Exception as e:
+                        logger.info(str(e))
 
         return await response.release()
         
