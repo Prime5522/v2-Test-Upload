@@ -40,10 +40,12 @@ async def echo(bot, update):
         return await update.reply_text(
             "**Choose Download type**",
             reply_markup=InlineKeyboardMarkup(
-                [[
-                    InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
-                    InlineKeyboardButton("Video 🎬", callback_data="ytdl_video"),
-                ]]
+                [
+                    [
+                        InlineKeyboardButton("Audio 🎵", callback_data="ytdl_audio"),
+                        InlineKeyboardButton("Video 🎬", callback_data="ytdl_video"),
+                    ]
+                ]
             ),
             quote=True,
         )
@@ -62,10 +64,14 @@ async def echo(bot, update):
                 o, length = entity.offset, entity.length
                 url = url[o: o + length]
 
-    if url: url = url.strip()
-    if file_name: file_name = file_name.strip()
-    if youtube_dl_username: youtube_dl_username = youtube_dl_username.strip()
-    if youtube_dl_password: youtube_dl_password = youtube_dl_password.strip()
+    if url:
+        url = url.strip()
+    if file_name:
+        file_name = file_name.strip()
+    if youtube_dl_username:
+        youtube_dl_username = youtube_dl_username.strip()
+    if youtube_dl_password:
+        youtube_dl_password = youtube_dl_password.strip()
 
     command_to_exec = ["yt-dlp", "--no-warnings", "--allow-dynamic-mpd", "-j", url]
     if Config.HTTP_PROXY:
@@ -143,12 +149,18 @@ async def echo(bot, update):
                 format_ext = formats.get("ext", "")
                 size = formats.get("filesize") or formats.get("filesize_approx") or 0
 
-                cb_string_video = f"video |{format_id}|{format_ext}|{randem}"
+                # এখন দুইটা আলাদা callback তৈরি করবো
+                cb_string_video = f"video|{format_id}|{format_ext}|{randem}"
+                cb_string_file = f"file|{format_id}|{format_ext}|{randem}"
 
                 ikeyboard = [
                     InlineKeyboardButton(
-                        f"🎬 {format_string} {format_ext} {humanbytes(size)}",
+                        f"🎬 {format_string} {format_ext} {humanbytes(size)} (Video)",
                         callback_data=cb_string_video
+                    ),
+                    InlineKeyboardButton(
+                        f"📁 {format_string} {format_ext} {humanbytes(size)} (Document)",
+                        callback_data=cb_string_file
                     )
                 ]
                 inline_keyboard.append(ikeyboard)
@@ -165,16 +177,16 @@ async def echo(bot, update):
         ])
 
     else:
+        # যদি formats না থাকে fallback
         format_id = response_json.get("format_id")
         format_ext = response_json.get("ext")
-        cb_string_video = f"video |{format_id}|{format_ext}|{randem}"
+
+        cb_string_video = f"video|{format_id}|{format_ext}|{randem}"
+        cb_string_file = f"file|{format_id}|{format_ext}|{randem}"
 
         inline_keyboard.append([
-            InlineKeyboardButton("🎬 Video", callback_data=cb_string_video)
-        ])
-
-        inline_keyboard.append([
-            InlineKeyboardButton("📁 Document", callback_data=cb_string_video)
+            InlineKeyboardButton("🎬 Video", callback_data=cb_string_video),
+            InlineKeyboardButton("📁 Document", callback_data=cb_string_file)
         ])
 
     reply_markup = InlineKeyboardMarkup(inline_keyboard)
@@ -190,4 +202,3 @@ async def echo(bot, update):
 
     if update.from_user.id not in Config.AUTH_USERS:
         Config.ADL_BOT_RQ[str(update.from_user.id)] = time.time()
-        
