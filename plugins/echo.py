@@ -30,6 +30,10 @@ async def cancel_command(client, message: Message):
 
 @Client.on_message(filters.private & filters.regex(pattern=".*http.*"))
 async def echo(bot, update):
+    # প্রত্যেক ইউজারের কাজ আলাদা করে চালানোর জন্য নতুন Task বানাচ্ছি
+    asyncio.create_task(process_download(bot, update))
+
+async def process_download(bot, update):
     logger.info(update.from_user)
     url = update.text
     youtube_dl_username = None
@@ -149,7 +153,7 @@ async def echo(bot, update):
                 format_ext = formats.get("ext", "")
                 size = formats.get("filesize") or formats.get("filesize_approx") or 0
 
-                # এখন দুইটা আলাদা callback তৈরি করবো
+                # ভিডিও এবং ফাইল আলাদা callback তৈরি
                 cb_string_video = f"video|{format_id}|{format_ext}|{randem}"
                 cb_string_file = f"file|{format_id}|{format_ext}|{randem}"
 
@@ -177,7 +181,6 @@ async def echo(bot, update):
         ])
 
     else:
-        # যদি formats না থাকে fallback
         format_id = response_json.get("format_id")
         format_ext = response_json.get("ext")
 
@@ -202,3 +205,4 @@ async def echo(bot, update):
 
     if update.from_user.id not in Config.AUTH_USERS:
         Config.ADL_BOT_RQ[str(update.from_user.id)] = time.time()
+        
