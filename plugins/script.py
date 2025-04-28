@@ -5,33 +5,52 @@ class Translation:
     START_TEXT = """
 Hi {}
 
-I am Powerful Url Uploader Bot
+I'ᴍ ᴀ sɪᴍᴘʟᴇ ʙᴜᴛ ᴀᴅᴠᴀɴᴄᴇᴅ URL Uᴘʟᴏᴀᴅᴇʀ Bᴏᴛ!  
+
+Sʜᴀʀᴇ ᴀ ᴅɪʀᴇᴄᴛ ᴅᴏᴡɴʟᴏᴀᴅ ʟɪɴᴋ, ᴀɴᴅ I'ʟʟ ᴜᴘʟᴏᴀᴅ ɪᴛ ᴛᴏ Tᴇʟᴇɢʀᴀᴍ ᴀs ᴀ ғɪʟᴇ ᴏʀ ᴠɪᴅᴇᴏ ғᴏʀ ʏᴏᴜ.
+
+➤ Yᴏᴜ ᴄᴀɴ ᴜᴘʟᴏᴀᴅ ᴀs ᴍᴀɴʏ ʟɪɴᴋs ᴀs ʏᴏᴜ ᴡᴀɴᴛ ᴀᴛ ᴀɴʏ ᴛɪᴍᴇ.
+
+➤ Tʜᴇʀᴇ ɪs ɴᴏ ᴘʀᴇᴍɪᴜᴍ ʜᴀssʟᴇ ᴀɴᴅ ɴᴏ ᴡᴀɪᴛɪɴɢ.
+
+Jᴜsᴛ sʜᴀʀᴇ ᴀ ʟɪɴᴋ ᴀɴᴅ ʀᴇʟᴀx!
+
+<blockquote> 🌿 ᴍᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ  <a href='https://t.me/Prime_Botz'>ᴘʀɪᴍᴇ ʙᴏᴛz 🔥</a></blockquote>
 """
 
     HELP_TEXT = """
 
-# Send me the Google Drive | ytdl | direct links.
+Sᴇɴᴅ ᴍᴇ ᴛʜᴇ Gᴏᴏɢʟᴇ Dʀɪᴠᴇ | Yᴛᴅʟ | Dɪʀᴇᴄᴛ ᴀɴᴅ ᴍᴀɴʏ ᴍᴏʀᴇ ʟɪɴᴋs sᴜᴘᴘᴏʀᴛᴇᴅ.
 
-# Select the desired option.
+➤ Fɪʀsᴛ, sᴇɴᴅ ᴀ ᴘɪᴄᴛᴜʀᴇ ᴛʜᴀᴛ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴇᴛ ᴀs ᴀ ᴛʜᴜᴍʙɴᴀɪʟ.
 
-# Then be relaxed your file will be uploaded soon..
+➤ Tʜᴇɴ sᴇɴᴅ ʏᴏᴜʀ ʟɪɴᴋ.
+
+(ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴀᴅᴅ ᴀ ᴄᴀᴘᴛɪᴏɴ, ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ɪᴛ ɪɴ ᴛʜɪs ғᴏʀᴍᴀᴛ: URL | Yᴏᴜʀ Cᴀᴘᴛɪᴏɴ)
+
+{Exᴀᴍᴘʟᴇ - https://drive...mp | KGF Chapter 1 (2018).mkv}
+
+➤ Sᴇʟᴇᴄᴛ ᴛʜᴇ ᴅᴇsɪʀᴇᴅ ᴏᴘᴛɪᴏɴ.
+
+➤ Tʜᴇɴ ʙᴇ ʀᴇʟᴀxᴇᴅ, ʏᴏᴜʀ ғɪʟᴇ ᴡɪʟʟ ʙᴇ ᴜᴘʟᴏᴀᴅᴇᴅ sᴏᴏɴ.
+
+⚠️ Iғ ʏᴏᴜ ʜᴀᴠᴇ ᴀɴʏ ᴘʀᴏʙʟᴇᴍs ᴏʀ ᴅᴏɴ'ᴛ ᴜɴᴅᴇʀsᴛᴀɴᴅ ᴀɴʏᴛʜɪɴɢ ᴡʜɪʟᴇ ᴜsɪɴɢ ᴛʜɪs ʙᴏᴛ, ʏᴏᴜ ᴄᴀɴ ᴍᴇssᴀɢᴇ ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ. 👇👇
 """
 
     # give credit to developer
 
     ABOUT_TEXT = """
-<b>♻️ My Name</b> : Url Uploader Bot
-
-<b>🌀 Channel</b> : <a href="https://t.me/TMWAD">@TMWAD</a>
-
-<b>🌺 Heroku</b> : <a href="https://heroku.com/">Heroku</a>
-
-<b>📑 Language :</b> <a href="https://www.python.org/">Python 3.10.5</a>
-
-<b>🇵🇲 Framework :</b> <a href="https://docs.pyrogram.org/">Pyrogram 2.0.30</a>
-
-<b>👲 Developer :</b> <a href="https://t.me/kinu6">@kinu6</a>
-
+<b>╭────[ ᴍʏ ᴅᴇᴛᴀɪʟs ]────⍟
+├⍟ ᴍʏ ɴᴀᴍᴇ : <a href='https://t.me/UploaderXPrime_Bot'>ᴜʀʟ ᴜᴩʟᴏᴀᴅᴇʀ ᴘʀɪᴍᴇ ʙᴏᴛ</a>
+├⍟ ᴏᴡɴᴇʀ : <a href='https://t.me/Prime_Nayem'>ᴍʀ.ᴘʀɪᴍᴇ</a> 
+├⍟ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ : <a href='https://t.me/Prime_Botz'>ᴘʀɪᴍᴇ ʙᴏᴛᴢ</a> 
+├⍟ ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ : <a href='https://t.me/PrimeCineZone'>Pʀɪᴍᴇ CɪɴᴇZᴏɴᴇ</a>
+├⍟ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ : <a href='https://t.me/Prime_Botz_Support'>ᴘʀɪᴍᴇ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ</a> 
+├⍟ ʟɪʙʀᴀʀʏ : <a href='https://docs.pyrogram.org/'>ᴘʏʀᴏɢʀᴀᴍ</a>
+├⍟ ʟᴀɴɢᴜᴀɢᴇ : <a href='https://www.python.org/download/releases/3.0/'>ᴘʏᴛʜᴏɴ 𝟹</a> 
+├⍟ ꜱᴇʀᴠᴇʀ : <a href='https://heroku.com/'>ʜᴇʀᴏᴋᴜ</a> 
+├⍟ ꜱᴛᴀᴛᴜꜱ : ᴠ4.8 [ ꜱᴛᴀʙʟᴇ ]
+╰───────────────⍟</b>
 """
 
     PROGRESS = """
@@ -66,10 +85,10 @@ I am Powerful Url Uploader Bot
     START_BUTTONS = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("❓ Help", callback_data="help"),
-                InlineKeyboardButton("🦊 About", callback_data="about"),
+                InlineKeyboardButton("〆 ʜᴇʟᴘ 〆", callback_data="help"),
+                InlineKeyboardButton("〆 ᴀʙᴏᴜᴛ 〆", callback_data="about"),
             ],
-            [InlineKeyboardButton("📛 Close", callback_data="close")],
+            [InlineKeyboardButton("✧ ᴄʀᴇᴀᴛᴏʀ ✧", url="https://t.me/Prime_Nayem")],
         ]
     )
     HELP_BUTTONS = InlineKeyboardMarkup(
