@@ -10,22 +10,9 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 
 async def progress_for_pyrogram(current, total, ud_type, message, start):
-    """
-    Display progress for a Pyrogram file upload or download.
-
-    Parameters:
-    - current (int): Current progress value.
-    - total (int): Total value (completion point).
-    - ud_type (str): Type of upload/download (e.g., "Uploading", "Downloading").
-    - message: The Pyrogram message to edit.
-    - start: The start time of the operation.
-
-    Returns:
-    None
-    """
     now = time.time()
     diff = now - start
-    if round(diff % 10.00) == 0 or current == total:
+    if round(diff % 5.00) == 0 or current == total:
         percentage = current * 100 / total
         speed = current / diff
         elapsed_time = round(diff) * 1000
@@ -35,20 +22,22 @@ async def progress_for_pyrogram(current, total, ud_type, message, start):
         elapsed_time = TimeFormatter(milliseconds=elapsed_time)
         estimated_total_time = TimeFormatter(milliseconds=estimated_total_time)
 
-        progress = "[{0}{1}] \nP: {2}%\n".format(
-            "".join(["◾" for _ in range(math.floor(percentage / 5))]),
-            "".join(["◽" for _ in range(20 - math.floor(percentage / 5))]),
-            round(percentage, 2),
-        )
+        # PROGRESS BAR
+        completed_blocks = math.floor(percentage / 5)
+        pending_blocks = 20 - completed_blocks
 
-        tmp = progress + "{0} of {1}\n\nSpeed: {2}/s\n\nETA: {3}\n\n".format(
-            humanbytes(current),
-            humanbytes(total),
-            humanbytes(speed),
-            estimated_total_time if estimated_total_time != "" else "0 s",
-        )
+        bar = ""
+        for _ in range(completed_blocks):
+            bar += "█"  # Completed part with solid block
+        for _ in range(pending_blocks):
+            bar += "⏳"  # Pending part with hourglass
+
+        progress = f"[{bar}] {round(percentage, 2)}%\n"
+
+        tmp = progress + f"Transferred: {humanbytes(current)} of {humanbytes(total)}\n\nSpeed: {humanbytes(speed)}/s\nETA: {estimated_total_time if estimated_total_time != '' else '0 s'}\n\n"
+        
         try:
-            await message.edit(text=f"{ud_type}\n {tmp}")
+            await message.edit(text=f"⬆ {ud_type}...\n\n{tmp}")
         except Exception as e:
             logger.info("Error %s", e)
             return
